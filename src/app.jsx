@@ -1,26 +1,51 @@
 import { useEffect, useState } from 'react';
-import './app.css';
+import styles from './app.module.css';
+import SearchHeader from './components/search_header/search_header';
+import VideoDetail from './components/video_detail/video_detail';
 import VideoList from './components/video_list/video_list';
 
-function App() {
+function App({ youtube }) {
   const [videos, setVideos] = useState([]);
+  const [selectedVideo, setSelectedVideo] = useState(null);
+
+  const search = query => {
+    setSelectedVideo(null);
+
+    youtube
+      .search(query) //
+      .then(videos => setVideos(videos));
+  };
+
+  const onVideoClick = video => {
+    console.log(`app.jsx video:`, video);
+    setSelectedVideo(video);
+  };
 
   useEffect(() => {
-    var requestOptions = {
-      method: 'GET',
-      redirect: 'follow',
-    };
-
-    fetch(
-      'https://youtube.googleapis.com/youtube/v3/videos?part=snippet&chart=mostPopular&maxResults=25&key=AIzaSyARkgfjtA5H3lwpNSYaK3zipugm1_l16kk',
-      requestOptions
-    )
-      .then(response => response.json())
-      .then(result => setVideos(result.items))
-      .catch(error => console.log('error', error));
+    youtube
+      .mostPopular() //
+      .then(videos => setVideos(videos));
   }, []);
 
-  return <VideoList videos={videos} />;
+  return (
+    <div className={styles.app}>
+      <SearchHeader onSearch={search} />
+      <section className={styles.content}>
+        {selectedVideo && (
+          <div className={styles.detail}>
+            <VideoDetail video={selectedVideo} />
+          </div>
+        )}
+        <div className={styles.list}>
+          <VideoList
+            videos={videos}
+            onVideoClick={onVideoClick}
+            display={selectedVideo ? 'list' : 'grid'}
+          />
+        </div>
+      </section>
+    </div>
+  );
 }
 
 export default App;
